@@ -16,7 +16,7 @@ import {NewNoteScreen} from './src/newnote';
 import type {DockItem} from './src/config';
 import {autoRefreshTitles} from './src/notetoc';
 import {timed} from './src/perf';
-import {blockMatches, Dock, FavouritesPage, HomeClock, RecentStrip, StarredPages} from './src/home';
+import {blockMatches, Dock, FavouritesPage, HomeClock, openToday, RecentStrip, StarredPages} from './src/home';
 
 const SCALE: Record<string, number> = {S: 1, M: 1.18, L: 1.4, XL: 1.7};
 
@@ -70,8 +70,8 @@ function HeaderIcon({glyph, onPress, gap}: {glyph: keyof typeof HEADER_ICONS; on
     <TouchableOpacity
       onPress={onPress}
       hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-      style={{width: 54, height: 54, borderRadius: 27, borderWidth: 2, borderColor: '#000000', alignItems: 'center', justifyContent: 'center', marginLeft: gap ? 14 : 0, backgroundColor: '#ffffff'}}>
-      <Image source={HEADER_ICONS[glyph]} style={{width: 30, height: 30}} resizeMode="contain" fadeDuration={0} />
+      style={{width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginLeft: gap ? 12 : 0, backgroundColor: '#ececec'}}>
+      <Image source={HEADER_ICONS[glyph]} style={{width: 26, height: 26}} resizeMode="contain" fadeDuration={0} />
     </TouchableOpacity>
   );
 }
@@ -224,6 +224,8 @@ function DashboardScreen(): React.JSX.Element {
     setFocus(next.zones.length - 1);
   };
   const focused = cfg && focus !== null ? cfg.zones[focus] : undefined;
+  // Tapping a date on the month calendar opens that day's notebook, when a button points at dated notebooks.
+  const dayRoot = (home?.dock.find(d => d.kind === 'today') as any)?.root as string | undefined;
   const starFolders = (cfg?.zones.find(z => z.type === 'stars') as any)?.folders ?? [];
 
   if (newNote) return <NewNoteScreen d={newNote} onClose={() => setNewNote(null)} />;
@@ -264,7 +266,7 @@ function DashboardScreen(): React.JSX.Element {
           // The blocks themselves stay hidden; buttons open them full screen.
           <ScrollView style={{flex: 1}} contentContainerStyle={{flexGrow: 1}}>
             <View style={{flex: 1, justifyContent: 'space-between', paddingHorizontal: 6}}>
-              <HomeClock hour24={home.hour24} nonce={nonce} font={fontFamily} bold={home.clockBold} />
+              <HomeClock hour24={home.hour24} nonce={nonce} font={fontFamily} bold={home.clockBold} onDay={dayRoot ? d => void openToday(dayRoot, d) : undefined} />
               <View style={{flex: 1, justifyContent: 'center', paddingVertical: 20}}>
                 <Dock items={home.dock} onBlock={openBlock} onNewNote={setNewNote} font={fontFamily} />
               </View>

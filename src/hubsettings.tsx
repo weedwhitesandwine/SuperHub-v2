@@ -35,7 +35,7 @@ const GREY = '#555555';
 export const T = {title: 30, h: 26, body: 21, small: 18, btn: 21};
 
 export const st = {
-  card: {borderWidth: 2, borderColor: INK, borderRadius: 14, padding: 18, marginBottom: 22, backgroundColor: '#ffffff'},
+  card: {borderWidth: 1.5, borderColor: '#c8c8c8', borderRadius: 24, padding: 22, marginBottom: 22, backgroundColor: '#ffffff'},
   h: {fontSize: T.h, fontWeight: '700' as const, color: INK, marginBottom: 6},
   p: {fontSize: T.small, color: GREY, marginBottom: 12, lineHeight: 26},
   label: {fontSize: T.body, fontWeight: '600' as const, color: INK, marginTop: 14, marginBottom: 8},
@@ -54,10 +54,8 @@ export function Btn({label, onPress, on, primary, disabled, wide}: {label: strin
         paddingHorizontal: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: disabled ? '#bbbbbb' : INK,
-        borderRadius: 12,
-        backgroundColor: dark ? INK : '#ffffff',
+        borderRadius: 30,
+        backgroundColor: dark ? INK : '#ececec',
         marginRight: 10,
         marginBottom: 10,
       }}>
@@ -255,7 +253,7 @@ function Backups({cfg, onLoad, onClose}: {cfg: DashboardConfig; onLoad: (c: Dash
   return (
     <Screen title="Saved copies of your settings" onClose={onClose}>
       <Text style={st.p}>
-        Save a copy of all your SuperHub settings under a name, and bring it back at any time. Copies are kept in MyStyle/Plugins/SuperHub/profiles.json, so they survive
+        Save a copy of all your SuperHub settings under a name, and bring it back at any time. Copies are kept in MyStyle/Plugins/SuperHub-v2/profiles.json, so they survive
         updates and reinstalls. SuperHub also keeps an automatic backup of the last settings it saved.
       </Text>
       <View style={st.row}>
@@ -321,7 +319,7 @@ function NameField({value, onSave}: {value: string; onSave: (v: string) => void}
       showSoftInputOnFocus
       returnKeyType="done"
       autoCorrect={false}
-      style={{minHeight: 68, fontSize: 24, borderWidth: 2, borderColor: INK, borderRadius: 12, paddingHorizontal: 16, color: INK, backgroundColor: '#ffffff'}}
+      style={{minHeight: 68, fontSize: 24, borderWidth: 1.5, borderColor: '#c8c8c8', borderRadius: 18, paddingHorizontal: 18, color: INK, backgroundColor: '#ffffff'}}
     />
   );
 }
@@ -341,7 +339,7 @@ function ButtonEditor({i, d, n, setItem, swap, clear, openPicker, userIcons}: {
   const base = {label: d.label, glyph: d.glyph, icon: d.icon};
   const icons = [...Object.keys(ICONS).sort(), ...userIcons];
   return (
-    <View style={[st.card, {borderWidth: 3}]}>
+    <View style={[st.card, {borderColor: INK}]}>
       <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 6}}>
         <DockPicture d={d} size={110} />
         <View style={{flex: 1, marginLeft: 16}}>
@@ -603,7 +601,7 @@ export function HubSettings(): React.JSX.Element {
   return (
     <View style={{flex: 1, backgroundColor: '#ffffff'}}>
       <View style={{flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10, borderBottomWidth: 2, borderColor: INK}}>
-        <Text style={{fontSize: T.title, fontWeight: '700', color: INK, flex: 1}}>SuperHub settings</Text>
+        <Text style={{fontSize: T.title, fontWeight: '700', color: INK, flex: 1}}>SuperHub-v2 settings</Text>
         <Btn primary label="Done" onPress={() => setRoute('dashboard')} />
         <Btn label="Close" onPress={() => leavePlugin()} />
       </View>
@@ -709,7 +707,7 @@ export function HubSettings(): React.JSX.Element {
           />
         </Card>
 
-        <Card title="Note Clips" note="In a note, lasso something and tap “SuperHub Clip” in the lasso toolbar to keep it on the Note Clips page (“SuperHub To-do” makes it a task).">
+        <Card title="Note Clips" note="In a note, lasso something and tap “SuperHub-v2 Clip” in the lasso toolbar to keep it on the Note Clips page (“SuperHub-v2 To-do” makes it a task).">
           <Text style={st.label}>Mark the clipped area on the note</Text>
           <Choice options={[{v: 'off', label: 'No'}, {v: 'grey', label: 'Grey frame'}, {v: 'black', label: 'Black frame'}]} value={cfg.clipFrame ?? 'off'} onChange={v => update(c => void (c.clipFrame = v))} />
           <Text style={st.label}>Keep clips as</Text>
@@ -740,7 +738,7 @@ export function HubSettings(): React.JSX.Element {
           </View>
         </Card>
 
-        <Card title="Troubleshooting" note="Keep a technical log in MyStyle/Plugins/SuperHub to attach to a bug report.">
+        <Card title="Troubleshooting" note="Keep a technical log in MyStyle/Plugins/SuperHub-v2 to attach to a bug report.">
           <Choice options={[{v: 'off', label: 'No log'}, {v: 'on', label: 'Keep a log'}]} value={cfg.debugLog === true ? 'on' : 'off'} onChange={v => update(c => void (c.debugLog = v === 'on'))} />
         </Card>
 

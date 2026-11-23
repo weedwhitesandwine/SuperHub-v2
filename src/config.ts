@@ -1,6 +1,6 @@
 /**
  * Dashboard configuration: schema, defaults, load/save, named profiles.
- * Stored at MyStyle/Plugins/SuperHub/config.json (older MyStyle/Dashboard/ is a
+ * Stored at MyStyle/Plugins/SuperHub-v2/config.json (older MyStyle/Dashboard/ is a
  * read-only fallback). Read/written via the native reader/writer (fetch caches
  * file:// URLs → stale config; the SDK has no writeFile). The wizard writes it;
  * advanced users can hand-edit the same JSON.
@@ -11,10 +11,10 @@ import {AppItem} from './apps';
 
 const {DashboardNative} = NativeModules;
 
-const CONFIG_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub/config.json';
+const CONFIG_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub-v2/config.json';
 /** A second copy written with every save, used when config.json is missing or unreadable
  *  (e.g. half-synced), so a bad read never starts the user from blank buttons. */
-const BACKUP_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub/config.backup.json';
+const BACKUP_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub-v2/config.backup.json';
 
 /** Max recent files a block can show. We rebuild the recent list ourselves from
  *  file mtime (the device's /Recent is out of scope on current firmware), so the
@@ -297,7 +297,7 @@ export interface DashboardConfig {
   clipBacklink?: boolean;
   /** MyStyle/fonts .ttf/.otf path for an OCR'd clip pasted as a text box; '' / undefined = the note's default font. */
   clipFontPath?: string;
-  /** Write the debug log to MyStyle/Plugins/SuperHub/SuperHub_log.txt (off by default). */
+  /** Write the debug log to MyStyle/Plugins/SuperHub-v2/SuperHub-v2_log.txt (off by default). */
   debugLog?: boolean;
   zones: Zone[];
 }
@@ -575,7 +575,7 @@ function normalizeZone(z: any): Zone {
 }
 
 // ---- Named config profiles (save / reload; guards against accidental reset) --
-const PROFILES_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub/profiles.json';
+const PROFILES_PATH = '/storage/emulated/0/MyStyle/Plugins/SuperHub-v2/profiles.json';
 
 async function readProfiles(): Promise<Record<string, DashboardConfig>> {
   try {

@@ -16,10 +16,10 @@ import {setRoute} from './route';
 import {ICONS} from './icons';
 
 /** Where people drop their own button pictures (PNG/JPG). */
-export const USER_ICON_DIR = '/storage/emulated/0/MyStyle/SuperHub/Icons';
+export const USER_ICON_DIR = '/storage/emulated/0/MyStyle/SuperHub-v2/Icons';
 
-const FRAME = require('../assets/hub/frame.png');
-const PFRAME = require('../assets/hub/pframe.png');
+const TILE = '#ececec'; // the soft grey behind each icon and header button
+const HAIR = '#c8c8c8'; // thin card and page borders
 
 const {DashboardNative} = NativeModules;
 const INK = '#000000';
@@ -41,7 +41,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // ---- Clock ----------------------------------------------------------------
-export function HomeClock({hour24, nonce, font, bold}: {hour24: boolean; nonce: number; font?: string; bold?: boolean}) {
+export function HomeClock({hour24, nonce, font, bold, onDay}: {hour24: boolean; nonce: number; font?: string; bold?: boolean; onDay?: (d: Date) => void}) {
   const [now, setNow] = useState(() => new Date());
   const [bat, setBat] = useState<{level: number; charging: boolean} | null>(null);
   useEffect(() => {
@@ -71,16 +71,65 @@ export function HomeClock({hour24, nonce, font, bold}: {hour24: boolean; nonce: 
     .filter(Boolean)
     .join('   ·   ');
   return (
-    <View style={{alignSelf: 'center', width: '92%', aspectRatio: 1720 / 600, alignItems: 'center', justifyContent: 'center', marginTop: 4}}>
-      <Image source={FRAME} style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'}} resizeMode="stretch" fadeDuration={0} />
-      <Text style={[{fontSize: 124, fontWeight: bold ? '700' : '200', color: INK, letterSpacing: bold ? -1 : -2, lineHeight: 140}, ff]}>
-        {time}
-        {ampm ? <Text style={{fontSize: 40}}>{ampm}</Text> : null}
-      </Text>
-      <Text style={[{fontSize: 26, fontWeight: '600', color: INK, marginTop: 2}, ff]}>
-        {DAYS[now.getDay()]} {now.getDate()} {MONTHS[now.getMonth()]}
-      </Text>
-      <Text style={[{fontSize: 17, color: GREY, marginTop: 6, letterSpacing: 1}, ff]}>{meta}</Text>
+    <View style={{marginHorizontal: 26, marginTop: 14, borderWidth: 1.5, borderColor: HAIR, borderRadius: 28, paddingVertical: 24, paddingHorizontal: 28, flexDirection: 'row', alignItems: 'center'}}>
+      <View style={{flex: 1}}>
+        <Text style={[{fontSize: 140, fontWeight: bold ? '600' : '200', color: INK, letterSpacing: bold ? -2 : -5, lineHeight: 150}, ff]}>
+          {time}
+          {ampm ? <Text style={{fontSize: 36}}>{ampm}</Text> : null}
+        </Text>
+        <Text style={[{fontSize: 27, fontWeight: '300', color: INK, marginTop: 2}, ff]}>
+          {DAYS[now.getDay()]}, {now.getDate()} {MONTHS[now.getMonth()]}
+        </Text>
+        <Text style={[{fontSize: 15, color: GREY, marginTop: 10, letterSpacing: 2}, ff]}>{meta.toUpperCase()}</Text>
+      </View>
+      <View style={{width: 1.5, alignSelf: 'stretch', backgroundColor: '#dddddd', marginHorizontal: 22}} />
+      <MonthGrid now={now} font={font} onDay={onDay} />
+    </View>
+  );
+}
+
+/** This month as a small calendar: weeks Monday to Sunday, today as a black circle,
+ *  weekends grey. Tapping a day calls onDay (the home screen opens that day's notebook). */
+function MonthGrid({now, font, onDay}: {now: Date; font?: string; onDay?: (d: Date) => void}) {
+  const ff = font ? {fontFamily: font} : null;
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7; // Monday first
+  const days = new Date(y, m + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(lead).fill(null), ...Array.from({length: days}, (_, i) => i + 1)];
+  while (cells.length % 7) cells.push(null);
+  const weeks = Array.from({length: cells.length / 7}, (_, w) => cells.slice(w * 7, w * 7 + 7));
+  const cell = 40;
+  return (
+    <View style={{width: cell * 7}}>
+      <Text style={[{fontSize: 20, fontWeight: '500', color: INK, marginBottom: 6, marginLeft: 4}, ff]}>{MONTHS[m]}</Text>
+      <View style={{flexDirection: 'row'}}>
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((l, i) => (
+          <Text key={i} style={[{width: cell, textAlign: 'center', fontSize: 13, fontWeight: '500', color: GREY, marginBottom: 4}, ff]}>
+            {l}
+          </Text>
+        ))}
+      </View>
+      {weeks.map((wk, w) => (
+        <View key={w} style={{flexDirection: 'row'}}>
+          {wk.map((d, i) => {
+            const today = d === now.getDate();
+            return (
+              <TouchableOpacity
+                key={i}
+                disabled={!d || !onDay}
+                onPress={() => d && onDay?.(new Date(y, m, d))}
+                style={{width: cell, height: cell, alignItems: 'center', justifyContent: 'center'}}>
+                {d ? (
+                  <View style={{width: cell - 6, height: cell - 6, borderRadius: cell, backgroundColor: today ? INK : 'transparent', alignItems: 'center', justifyContent: 'center'}}>
+                    <Text style={[{fontSize: 17, color: today ? '#ffffff' : i > 4 ? GREY : INK}, ff]}>{d}</Text>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }
@@ -88,8 +137,7 @@ export function HomeClock({hour24, nonce, font, bold}: {hour24: boolean; nonce: 
 // ---- Icon grid -------------------------------------------------------------
 /** Today's notebook in a folder of dated notebooks (<root>/YYYY/YYYY-MM-DD.note), on page 2;
  *  else <root>/<folder name> YYYY.note; else the folder itself. */
-async function openToday(root: string) {
-  const d = new Date();
+export async function openToday(root: string, d: Date = new Date()) {
   const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const day = `${root}/${d.getFullYear()}/${ymd}.note`;
   const ok = await DashboardNative?.fileExists?.(day).catch(() => false);
@@ -114,33 +162,36 @@ export function pressDock(d: DockItem, onBlock: (b: string) => void, onNewNote?:
 /** A button's picture: its sketch icon, or the old round glyph when it has none. */
 export function DockPicture({d, size}: {d: DockItem; size: number}) {
   const src = d.icon ? (d.icon.startsWith('/') ? {uri: 'file://' + d.icon} : ICONS[d.icon]) : undefined;
+  const tile = {width: size, height: size, borderRadius: size * 0.28, alignItems: 'center' as const, justifyContent: 'center' as const};
   if (!src && d.kind === 'none')
     return (
-      <View style={{width: size, height: size, alignItems: 'center', justifyContent: 'center'}}>
-        <View style={{width: size * 0.7, height: size * 0.7, borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#9a9a9a', alignItems: 'center', justifyContent: 'center'}}>
-          <Text style={{fontSize: size * 0.3, color: '#9a9a9a'}}>+</Text>
-        </View>
+      <View style={[tile, {borderWidth: 2, borderStyle: 'dashed', borderColor: '#b0b0b0'}]}>
+        <Text style={{fontSize: size * 0.34, color: '#9a9a9a', fontWeight: '200'}}>+</Text>
       </View>
     );
-  if (src) return <Image source={src} style={{width: size, height: size}} resizeMode="contain" fadeDuration={0} />;
-  return (
-    <View style={{width: size, height: size, alignItems: 'center', justifyContent: 'center'}}>
-      <View style={{width: size * 0.7, height: size * 0.7, borderRadius: size, borderWidth: 2.5, borderColor: INK, alignItems: 'center', justifyContent: 'center'}}>
-        <Text style={{fontSize: size * 0.3, color: INK}}>{d.glyph}</Text>
+  // built-in icons are line glyphs on a soft tile; people's own pictures fill the tile
+  if (src)
+    return (
+      <View style={[tile, {backgroundColor: TILE, overflow: 'hidden'}]}>
+        <Image source={src} style={d.icon?.startsWith('/') ? {width: size, height: size} : {width: size * 0.5, height: size * 0.5}} resizeMode={d.icon?.startsWith('/') ? 'cover' : 'contain'} fadeDuration={0} />
       </View>
+    );
+  return (
+    <View style={[tile, {backgroundColor: TILE}]}>
+      <Text style={{fontSize: size * 0.34, color: INK}}>{d.glyph}</Text>
     </View>
   );
 }
 
-/** The home buttons: rows of five pencil-sketch icons with their names. */
+/** The home buttons: rows of five icon tiles with their names. */
 export function Dock({items, onBlock, onNewNote, font}: {items: DockItem[]; onBlock: (b: string) => void; onNewNote?: (d: Extract<DockItem, {kind: 'create'}>) => void; font?: string}) {
   const ff = font ? {fontFamily: font} : null;
   return (
-    <View style={{flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 6}}>
+    <View style={{flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20}}>
       {items.map((d, i) => (
         <TouchableOpacity key={i} onPress={() => pressDock(d, onBlock, onNewNote)} style={{width: '20%', alignItems: 'center', paddingVertical: 14}}>
-          <DockPicture d={d} size={140} />
-          <Text style={[{fontSize: 20, fontWeight: '600', color: INK, marginTop: 8}, ff]} numberOfLines={1}>
+          <DockPicture d={d} size={116} />
+          <Text style={[{fontSize: 18, fontWeight: '400', color: '#222222', marginTop: 12}, ff]} numberOfLines={1}>
             {d.label || (d.kind === 'none' ? 'Set up' : '')}
           </Text>
         </TouchableOpacity>
@@ -243,25 +294,21 @@ export function RecentStrip({count, nonce, font}: {count: number; nonce: number;
   if (count <= 0) return null;
   const ff = font ? {fontFamily: font} : null;
   return (
-    <View style={{marginBottom: 18, paddingHorizontal: 14}}>
-      <Text style={[{fontSize: 15, fontWeight: '700', letterSpacing: 3, color: INK, marginBottom: 10, marginLeft: 4}, ff]}>RECENT</Text>
+    <View style={{marginBottom: 30, paddingHorizontal: 30}}>
+      <Text style={[{fontSize: 14, fontWeight: '500', letterSpacing: 3, color: GREY, marginBottom: 14, marginLeft: 2}, ff]}>RECENT</Text>
       {items === null && <Text style={{color: GREY, fontSize: 15, marginLeft: 4}}>loading…</Text>}
       {items && items.length === 0 && <Text style={{color: GREY, fontSize: 15, marginLeft: 4}}>No recent notes.</Text>}
       <View style={{flexDirection: 'row'}}>
         {(items ?? []).map((t, i) => (
           <TouchableOpacity key={t.path} style={{flex: 1, marginLeft: i ? 14 : 0, maxWidth: `${100 / count}%`}} onPress={() => openFile(t.path, 0)}>
-            {/* the page sits inside a light pencil frame (pframe.png: 400 x 520, opening 42 px in) */}
-            <View style={{aspectRatio: 400 / 520}}>
-              <Image source={PFRAME} style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'}} resizeMode="stretch" fadeDuration={0} />
-              <View style={{position: 'absolute', left: '10.5%', right: '10.5%', top: '8.1%', bottom: '8.1%', overflow: 'hidden', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center'}}>
-                {t.png ? (
-                  <Image source={{uri: 'file://' + t.png}} style={{width: '100%', height: '100%'}} resizeMode="cover" resizeMethod="resize" fadeDuration={0} />
-                ) : (
-                  <Text style={{fontSize: 40, color: '#9a9a9a'}}>{/\.pdf$/i.test(t.path) ? 'PDF' : /\.epub$/i.test(t.path) ? 'EPUB' : '…'}</Text>
-                )}
-              </View>
+            <View style={{aspectRatio: 0.75, borderWidth: 1, borderColor: HAIR, borderRadius: 16, overflow: 'hidden', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center'}}>
+              {t.png ? (
+                <Image source={{uri: 'file://' + t.png}} style={{width: '100%', height: '100%'}} resizeMode="cover" resizeMethod="resize" fadeDuration={0} />
+              ) : (
+                <Text style={{fontSize: 34, color: '#9a9a9a', fontWeight: '300'}}>{/\.pdf$/i.test(t.path) ? 'PDF' : /\.epub$/i.test(t.path) ? 'EPUB' : '…'}</Text>
+              )}
             </View>
-            <Text style={[{fontSize: 16, fontWeight: '600', color: INK, marginTop: 7}, ff]} numberOfLines={1}>
+            <Text style={[{fontSize: 15, fontWeight: '500', color: INK, marginTop: 10}, ff]} numberOfLines={1}>
               {noteTitle(t.path)}
             </Text>
             <Text style={[{fontSize: 13, color: GREY, marginTop: 1}, ff]} numberOfLines={1}>

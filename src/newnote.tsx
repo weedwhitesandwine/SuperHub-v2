@@ -91,7 +91,7 @@ export function NewNoteScreen({d, onClose}: {d: Extract<DockItem, {kind: 'create
           autoCorrect={false}
           placeholder="Name of the note"
           placeholderTextColor="#999999"
-          style={{minHeight: 68, fontSize: 24, borderWidth: 2, borderColor: INK, borderRadius: 12, paddingHorizontal: 16, color: INK}}
+          style={{minHeight: 68, fontSize: 24, borderWidth: 1.5, borderColor: '#c8c8c8', borderRadius: 18, paddingHorizontal: 18, color: INK}}
         />
 
         <Text style={st.label}>Folder</Text>
