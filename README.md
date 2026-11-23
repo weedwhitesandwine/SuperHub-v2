@@ -4,6 +4,8 @@
 
 SuperHub-v2 is based on [SuperDashboard](https://github.com/AgP42/SuperDashboard) by **AgP42**, used under the MIT licence. Its icons are from [Lucide](https://lucide.dev) (ISC licence). Thank you to AgP42 and the Lucide contributors.
 
+![Home screen](docs/img/superhub-v2/1-home.png)
+
 ## What it does
 
 - **Home screen**: the clock (date, week number, battery) beside this month's calendar, ten buttons in two rows of five, and your most recent pages as previews. Tap a preview to open it. If a button opens dated notebooks, tap a date on the calendar to open that day's notebook.
@@ -17,6 +19,10 @@ SuperHub-v2 is based on [SuperDashboard](https://github.com/AgP42/SuperDashboard
 - **48 line icons** from Lucide, or your own pictures.
 - **Starred pages**: every page you drew a five-point star on, as a grid of previews.
 - **Note Clips and To-do**: lasso something in a note and tap *SuperHub-v2 Clip* or *SuperHub-v2 To-do* in the lasso toolbar.
+
+| | |
+|---|---|
+| ![The icons](docs/img/superhub-v2/2-icons.png) | ![Starred pages](docs/img/superhub-v2/3-starred.png) |
 
 ## Install
 
