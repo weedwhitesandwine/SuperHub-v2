@@ -657,6 +657,11 @@ new_zip_package() {
 rename_to_snplg_file() {
     local zip_file_path="$1"
     local project_name="$2"
+    # Name the package after the plugin's display name in PluginConfig.json
+    # (e.g. SuperHub-v2), falling back to the package name.
+    local display
+    display="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['name'])" "$(pwd)/PluginConfig.json" 2>/dev/null)"
+    [[ -n "$display" && "$display" != *"{"* ]] && project_name="$display"
     local snplg="${zip_file_path%/*}/$project_name.snplg"
     cp "$zip_file_path" "$snplg"
     write_color_output "Plugin package created: $snplg" "Green"
