@@ -20,7 +20,7 @@ SuperHub-v2 is based on [SuperDashboard](https://github.com/AgP42/SuperDashboard
 
 ## Install
 
-You need Supernote firmware with plugin support: Chauvet **3.29.43 or later** on Manta and Nomad (2.26.40 or later on A5 X and A6 X). SuperHub-v2 has been tested on a Manta with 3.31.45.
+You need Supernote firmware with plugin support: Chauvet **3.29.43 or later** on Manta and Nomad (2.26.40 or later on A5 X and A6 X). SuperHub-v2 was developed on a Manta with 3.31.45.
 
 **From InkHub** (once SuperHub-v2 is listed there): open InkHub on your Supernote, find SuperHub-v2 under Plugins, and install it.
 
