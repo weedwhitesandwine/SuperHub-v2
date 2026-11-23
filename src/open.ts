@@ -112,28 +112,24 @@ export function stampName(): string {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
-/** Returns false (after telling the user) when the note could not be made. */
+/** Make a new notebook in `folder` and open it, by asking the Notes app to create it
+ *  exactly as the Files app's New note button does (works from anywhere, unlike
+ *  PluginFileAPI.createNote, which needs the Notes app open). Without a template,
+ *  the plain white page. Returns false (after telling the user) when it can't. */
 export async function createNote(folder: string, template?: string, recognition?: boolean, name?: string, landscape?: boolean): Promise<boolean> {
-  const notePath = `${folder.replace(/\/$/, '')}/${(name || stampName()).replace(/[\\/:*?"<>|]/g, '_')}.note`;
+  const dir = folder.replace(/\/$/, '');
+  const base = (name || stampName()).replace(/\.note$/i, '').replace(/[\\/:*?"<>|]/g, '_');
   try {
-    let tpl = template;
-    if (!tpl) {
-      const r: any = await PluginCommAPI.getNoteSystemTemplates();
-      const list: any[] = (r?.success ? r.result : r) ?? [];
-      tpl = (list.find(t => /white/i.test(t?.name ?? '')) ?? list[0])?.name;
+    if (await DashboardNative.fileExists(`${dir}/${base}.note`).catch(() => false)) {
+      await NativeUIUtils.showRattaDialog(`There is already a note called “${base}” in that folder.`, '', 'OK', false).catch(() => {});
+      return false;
     }
-    if (await DashboardNative.fileExists(notePath).catch(() => false)) throw new Error('exists');
-    const res: any = await PluginFileAPI.createNote({notePath, template: tpl ?? 'style_white', mode: recognition ? 1 : 0, isPortrait: !landscape});
-    if (!(res === true || res?.success)) throw new Error(res?.error?.message ?? 'createNote refused');
-  } catch {
-    try {
-      await NativeUIUtils.showRattaDialog("Couldn't make the note. Is there already a note with that name?", '', 'OK', false);
-    } catch {
-      /* ignore */
-    }
+    await DashboardNative.newNoteInNotes(dir, base, template || 'style_white', recognition ? 1 : 0, !!landscape);
+  } catch (e: any) {
+    await NativeUIUtils.showRattaDialog(`Couldn't make the note (${e?.message ?? e}).`, '', 'OK', false).catch(() => {});
     return false;
   }
-  await openFile(notePath, 1);
+  leavePlugin();
   return true;
 }
 
@@ -143,15 +139,38 @@ export async function createDoc(folder: string): Promise<void> {
   await go(() => DashboardNative.newTypedDocument(`${folder.replace(/\/$/, '')}/${stampName()}.doc`), 'make a new document');
 }
 
-/** The Supernote's own page styles, for the New note button's settings. */
+/** Page styles every Supernote ships (in /vendor/etc/notestyle on a Manta, 3.31), used
+ *  when the firmware can't be asked (outside the Notes app the SDK call is refused). */
+const KNOWN_STYLES = [
+  'style_white', 'style_blank', 'style_5mm_dots', 'style_5mm_grid', 'style_10mm_grid', 'style_5mm_engineering_grid',
+  'style_8mm_ruled_line', 'style_9mm_ruled_line', 'style_10mm_ruled_line', 'style_college_ruled', 'style_wide_ruled',
+  'style_9mm_cnt', 'style_10mm_cnt', 'style_four_wire', 'style_french_seyes_ruling', 'style_arabic_line_ruling', 'style_staff',
+  'style_tian_zige', 'style_nine_palace_lattice', 'style_four_quadrant_method', 'style_task_list', 'style_list_format',
+  'style_meeting_notes', 'style_reading_note', 'style_letter_format', 'style_sheet_format', 'style_daily_calendar',
+  'style_weekly_calendar', 'style_hand_sketch_diary', 'style_black',
+];
+// app-specific styles (email, feedback, InkHub) aren't offered for new notes
+const SKIP_STYLE = /email|feedback|inkhub/;
+
+/** The Supernote's own page styles, for the New note screen: from the firmware when it
+ *  answers, else from its style folder, else the list every Supernote ships. */
 export async function systemTemplates(): Promise<string[]> {
   try {
     const r: any = await PluginCommAPI.getNoteSystemTemplates();
     const list: any[] = (r?.success ? r.result : r) ?? [];
-    return list.map(t => String(t?.name ?? '')).filter(Boolean);
+    const names = list.map(t => String(t?.name ?? '')).filter(Boolean);
+    if (names.length) return names;
   } catch {
-    return [];
+    /* refused outside the Notes app */
   }
+  try {
+    const files: any[] = (await DashboardNative.listDir('/vendor/etc/notestyle')) ?? [];
+    const names = [...new Set(files.map(f => String(f.name).replace(/_a5x2?$/, '')))].filter(n => n.startsWith('style_') && !n.startsWith('style_h_') && !SKIP_STYLE.test(n));
+    if (names.length) return names.sort((a, b) => (a === 'style_white' ? -1 : b === 'style_white' ? 1 : a.localeCompare(b)));
+  } catch {
+    /* not readable */
+  }
+  return KNOWN_STYLES;
 }
 
 /** The user's own page templates: images anywhere in MyStyle (two folders deep),

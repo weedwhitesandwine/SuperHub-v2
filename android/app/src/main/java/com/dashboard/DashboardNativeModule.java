@@ -161,6 +161,34 @@ public class DashboardNativeModule extends ReactContextBaseJavaModule {
         }
     }
 
+    /**
+     * Make a new notebook and open it, the way the Files app's New note button does:
+     * VIEW NoteInsidePagesActivity with the folder (file_path + currentPath), the
+     * name without ".note" (note_name), the page style (note_style: a system style
+     * name like style_white, or a template image path), note_mode (0 normal,
+     * 1 real-time recognition) and note_direction (true = landscape). Unlike
+     * PluginFileAPI.createNote this works when the Notes app is not open
+     * (that call fails with code 118 then). Verified in inbox.apk, Chauvet 3.31.
+     */
+    @ReactMethod
+    public void newNoteInNotes(String folder, String name, String style, int mode, boolean landscape, Promise promise) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setComponent(new ComponentName("com.ratta.supernote.note", "com.ratta.supernote.note.view.NoteInsidePagesActivity"));
+            intent.putExtra("file_path", folder);
+            intent.putExtra("currentPath", folder);
+            intent.putExtra("note_mode", mode);
+            intent.putExtra("note_name", name);
+            intent.putExtra("note_direction", landscape);
+            intent.putExtra("note_style", style);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getReactApplicationContext().startActivity(intent);
+            promise.resolve(true);
+        } catch (Exception e) {
+            promise.reject("NEWNOTE_FAILED", e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        }
+    }
+
     /** Launch any activity by "package/activity" component string (Apps zone). */
     @ReactMethod
     public void launchActivity(String component, Promise promise) {
